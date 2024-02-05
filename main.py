@@ -2,20 +2,35 @@
 import pygame
 import sys
 
+def load_image(image_path, size):
+    image = pygame.image.load(image_path)
+    return pygame.transform.scale(image, size)
+
 pygame.init()
 
 screenWidth, screenHeight = 1000, 800
 logoSpeed = [2, 2]
 backgroundColor = (0, 0, 0)
 
+# Get user-defined image path
+image_path = input("Enter the path of the image: ")
+
+# Specify the size of the image
+image_size = (200, 200)
+
+# Ensure the path is correct and load the image dynamically
+if os.path.isfile(image_path):
+    logo = load_image(image_path, image_size)
+else:
+    print(f"Error: The file '{image_path}' does not exist.")
+    sys.exit()
+
 #creating a Pygame screen with the specified dimensions
 screen = pygame.display.set_mode((screenWidth, screenHeight))
 
 pygame.display.set_caption("Zen Screens") #window-screen
 
-logo = pygame.image.load("x.jpg")
-logo = pygame.transform.scale(logo, (200, 200))
-logoRect = logo.get_rect() #rectangle object associated with "x"
+logoRect = logo.get_rect() # rectangle object associated with the image
 
 #Create a Pygame clock object to control the frame rate
 clock = pygame.time.Clock()
