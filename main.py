@@ -1,6 +1,7 @@
 #ZenScreens
 import pygame
 import sys
+import os
 
 def load_image(image_path, size):
     image = pygame.image.load(image_path)
