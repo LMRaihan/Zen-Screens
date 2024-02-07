@@ -1,11 +1,20 @@
 #ZenScreens
+
 import pygame
 import sys
 import os
+import tkinter as tk
+from tkinter import filedialog
 
 def load_image(image_path, size):
     image = pygame.image.load(image_path)
     return pygame.transform.scale(image, size)
+
+def browse_image_path():
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    file_path = filedialog.askopenfilename()
+    return file_path
 
 pygame.init()
 
@@ -13,8 +22,12 @@ screenWidth, screenHeight = 1000, 800
 logoSpeed = [2, 2]
 backgroundColor = (0, 0, 0)
 
-# Get user-defined image path
-image_path = input("Enter the path of the image: ")
+# Create a Tkinter window for browsing image path
+root = tk.Tk()
+root.withdraw()  # Hide the main window
+
+# Browse button to select the image path
+image_path = browse_image_path()
 
 # Specify the size of the image
 image_size = (200, 200)
