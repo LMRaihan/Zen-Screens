@@ -5,144 +5,159 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
 
-def load_image(image_path, size):
-    image = pygame.image.load(image_path)
-    return pygame.transform.scale(image, size)
+# Model
+class ScreenSaverModel:
+    def __init__(self):
+        self.configuration = {
+            'duration': 300,  # default duration in seconds
+            'visuals': []     # list of selected visuals
+        }
+        self.idle_time = 0
 
-def browse_image_path():
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window
-    file_path = filedialog.askopenfilename()
-    return file_path
+    def update_configuration(self, duration, visuals):
+        self.configuration['duration'] = duration
+        self.configuration['visuals'] = visuals
 
-def configure_screensaver():
-    global logo, logoRect, logoSpeed
+    def set_idle_time(self, idle_time):
+        self.idle_time = idle_time
 
-    image_path = browse_image_path()
-    if os.path.isfile(image_path):
-        logo = load_image(image_path, image_size)
-    else:
-        print(f"Error: The file '{image_path}' does not exist.")
-        return
+# View
+class ScreenSaverView:
+    def __init__(self):
+        self.config_window = tk.Tk()
+        self.config_window.title("Zen Screensaver Settings")
 
-    # Set screensaver speed
-    speed_x = speed_x_var.get()
-    speed_y = speed_y_var.get()
-    logoSpeed = [speed_x, speed_y]
+        self.style = ttk.Style()
+        self.style.theme_use("clam")
+        self.style.configure('TButton', background='#4CAF50', foreground='white')
+        self.style.configure('TFrame', background='#f0f0f0')
+        self.style.configure('TLabel', background='#f0f0f0')
 
-    # Hide the configuration window after completing the configuration
-    config_window.withdraw()
+        self.image_frame = ttk.Frame(self.config_window)
+        self.image_frame.pack(pady=10)
 
-    # Show the Zen Screen
-    show_zen_screen()
+        self.browse_button = ttk.Button(self.image_frame, text="Browse Image", command=self.configure_screensaver)
+        self.browse_button.pack(side=tk.LEFT, padx=10)
 
-def show_zen_screen():
-    global logo, logoRect, logoSpeed
-    
-    #creating a Pygame screen with the specified dimensions
-    screen = pygame.display.set_mode((screenWidth, screenHeight))
+        self.selected_image_label = ttk.Label(self.image_frame, text="No image selected")
+        self.selected_image_label.pack(side=tk.LEFT)
 
-    pygame.display.set_caption("Zen Screens") #window-screen
+        self.speed_frame = ttk.Frame(self.config_window)
+        self.speed_frame.pack(pady=10)
 
-    # Initialize logoRect with the initial position
-    logoRect = pygame.Rect((screenWidth//2 - image_size[0]//2, screenHeight//2 - image_size[1]//2), image_size)
+        self.speed_x_var = tk.IntVar(value=2)
+        self.speed_y_var = tk.IntVar(value=2)
 
-    #Create a Pygame clock object to control the frame rate
-    clock = pygame.time.Clock()
+        self.speed_x_label = ttk.Label(self.speed_frame, text="Speed X:")
+        self.speed_x_label.grid(row=0, column=0, padx=5, pady=5)
+        self.speed_x_slider = ttk.Scale(self.speed_frame, from_=1, to=10, orient=tk.HORIZONTAL, variable=self.speed_x_var)
+        self.speed_x_slider.grid(row=0, column=1, padx=5, pady=5)
 
-    #QUIT handling loop
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit() 
+        self.speed_y_label = ttk.Label(self.speed_frame, text="Speed Y:")
+        self.speed_y_label.grid(row=1, column=0, padx=5, pady=5)
+        self.speed_y_slider = ttk.Scale(self.speed_frame, from_=1, to=10, orient=tk.HORIZONTAL, variable=self.speed_y_var)
+        self.speed_y_slider.grid(row=1, column=1, padx=5, pady=5)
 
-        screen.fill(backgroundColor) 
-    
-        if logo:
-            #draw the logo image onto the screen at its current position.
-            screen.blit(logo, logoRect) 
-            
-            # Move the logo rectangle by the specified speed       
-            logoRect = logoRect.move(logoSpeed) 
-    
-            #Bounce the logo off the screen edges
-            if logoRect.left < 0 or logoRect.right > screenWidth:
-                logoSpeed[0] = -logoSpeed[0]
-            if logoRect.top < 0 or logoRect.bottom > screenHeight:
-                logoSpeed[1] = -logoSpeed[1]
-    
-      #the display to show the changes made during this iteration of the game loop.
-        pygame.display.flip()
-      # Adjust the frame rate as needed                              
-        clock.tick(60)   
+        self.image_size = (200, 200)
 
-# Pygame initialization
-pygame.init()
+    def configure_screensaver(self):
+        global logo, logoRect, logoSpeed
 
-screenWidth, screenHeight = 1000, 800
-backgroundColor = (0, 0, 0)
+        image_path = self.browse_image_path()
+        if os.path.isfile(image_path):
+            logo = self.load_image(image_path, self.image_size)
+        else:
+            print(f"Error: The file '{image_path}' does not exist.")
+            return
 
-# Default screensaver speed
-default_speed = [2, 2]
+        speed_x = self.speed_x_var.get()
+        speed_y = self.speed_y_var.get()
+        logoSpeed = [speed_x, speed_y]
 
-# Create a Tkinter window for configuring screensaver settings
-config_window = tk.Tk()
-config_window.title("Zen Screensaver Settings")
+        self.config_window.withdraw()
+        self.show_zen_screen()
 
-# Configure the style of the GUI elements
-style = ttk.Style()
-style.theme_use("clam")  # Change to any theme you like
-style.configure('TButton', background='#4CAF50', foreground='white')
-style.configure('TFrame', background='#f0f0f0')
-style.configure('TLabel', background='#f0f0f0')
+    def browse_image_path(self):
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename()
+        return file_path
 
-# Frame for the image selection
-image_frame = ttk.Frame(config_window)
-image_frame.pack(pady=10)
+    def load_image(self, image_path, size):
+        image = pygame.image.load(image_path)
+        return pygame.transform.scale(image, size)
 
-# Browse button to select the image path
-browse_button = ttk.Button(image_frame, text="Browse Image", command=configure_screensaver)
-browse_button.pack(side=tk.LEFT, padx=10)
+    def show_zen_screen(self):
+        global logo, logoRect, logoSpeed
 
-# Label to display selected image path
-selected_image_label = ttk.Label(image_frame, text="No image selected")
-selected_image_label.pack(side=tk.LEFT)
+        screen = pygame.display.set_mode((screenWidth, screenHeight))
+        pygame.display.set_caption("Zen Screens")
 
-# Speed sliders frame
-speed_frame = ttk.Frame(config_window)
-speed_frame.pack(pady=10)
+        logoRect = pygame.Rect((screenWidth // 2 - self.image_size[0] // 2, screenHeight // 2 - self.image_size[1] // 2), self.image_size)
 
-# Speed sliders
-speed_x_var = tk.IntVar(value=default_speed[0])
-speed_y_var = tk.IntVar(value=default_speed[1])
+        clock = pygame.time.Clock()
 
-speed_x_label = ttk.Label(speed_frame, text="Speed X:")
-speed_x_label.grid(row=0, column=0, padx=5, pady=5)
-speed_x_entry = ttk.Entry(speed_frame, textvariable=speed_x_var)
-speed_x_entry.grid(row=0, column=1, padx=5, pady=5)
-speed_x_slider = ttk.Scale(speed_frame, from_=1, to=10, orient=tk.HORIZONTAL, variable=speed_x_var)
-speed_x_slider.grid(row=0, column=2, padx=5, pady=5)
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
-speed_y_label = ttk.Label(speed_frame, text="Speed Y:")
-speed_y_label.grid(row=1, column=0, padx=5, pady=5)
-speed_y_entry = ttk.Entry(speed_frame, textvariable=speed_y_var)
-speed_y_entry.grid(row=1, column=1, padx=5, pady=5)
-speed_y_slider = ttk.Scale(speed_frame, from_=1, to=10, orient=tk.HORIZONTAL, variable=speed_y_var)
-speed_y_slider.grid(row=1, column=2, padx=5, pady=5)
+            screen.fill(backgroundColor)
 
-# Specify the size of the image
-image_size = (200, 200)
+            if logo:
+                screen.blit(logo, logoRect)
+                logoRect = logoRect.move(logoSpeed)
 
-# Initialize screensaver parameters
-logo = None
-logoSpeed = default_speed
-logoRect = None
+                if logoRect.left < 0 or logoRect.right > screenWidth:
+                    logoSpeed[0] = -logoSpeed[0]
+                if logoRect.top < 0 or logoRect.bottom > screenHeight:
+                    logoSpeed[1] = -logoSpeed[1]
 
-# Update the Tkinter window
-config_window.update_idletasks()
-config_window.update()
+            pygame.display.flip()
+            clock.tick(60)
 
-# Start the Tkinter event loop
-config_window.mainloop()
+# Controller
+class ScreenSaverController:
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
 
+    def handle_user_input(self):
+        duration = 600
+        visuals = ['visual1', 'visual2']
+        self.model.update_configuration(duration, visuals)
+
+    def update_model_idle_time(self, idle_time):
+        self.model.set_idle_time(idle_time)
+
+    def trigger_screen_saver(self):
+        print("Triggering screen saver...")
+
+# Main function
+def main():
+    model = ScreenSaverModel()
+    view = ScreenSaverView()
+    controller = ScreenSaverController(model, view)
+
+    controller.handle_user_input()
+
+    idle_time = 120
+    controller.update_model_idle_time(idle_time)
+
+    controller.trigger_screen_saver()
+
+if __name__ == "__main__":
+    # Pygame initialization
+    pygame.init()
+
+    screenWidth, screenHeight = 1000, 800
+    backgroundColor = (0, 0, 0)
+
+    default_speed = [2, 2]
+
+    logo = None
+    logoSpeed = default_speed
+    logoRect = None
+
+    main()
